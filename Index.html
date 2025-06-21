@@ -1,0 +1,432 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Medication Tracker</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;700&display=swap" rel="stylesheet">
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+            background: #1a1a2e;
+            color: #e0e0e0;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            overflow-x: hidden;
+            padding: 1rem;
+        }
+
+        .glass-container {
+            background: rgba(255, 255, 255, 0.05);
+            backdrop-filter: blur(12px);
+            -webkit-backdrop-filter: blur(12px);
+            border-radius: 20px;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.37);
+            transition: all 0.3s ease;
+        }
+
+        .neon-glow {
+            box-shadow: 0 0 8px rgba(0, 119, 255, 0.7), 0 0 20px rgba(0, 119, 255, 0.7), 0 0 30px rgba(77, 166, 255, 0.7), 0 0 40px rgba(77, 166, 255, 0.5);
+        }
+        
+        .neon-text {
+            text-shadow: 0 0 5px rgba(77, 166, 255, 1), 0 0 10px rgba(77, 166, 255, 1), 0 0 15px rgba(77, 166, 255, 0.8);
+        }
+
+        .form-input {
+            background: rgba(0, 0, 0, 0.3);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            color: #e0e0e0;
+            transition: border-color 0.3s, box-shadow 0.3s;
+        }
+
+        .form-input:focus {
+            outline: none;
+            border-color: rgba(77, 166, 255, 0.8);
+            box-shadow: 0 0 10px rgba(77, 166, 255, 0.5);
+        }
+
+        .form-input::placeholder {
+            color: #a0a0a0;
+        }
+        
+        .btn-glow {
+            background: linear-gradient(45deg, #0077ff, #00c6ff);
+            border: none;
+            box-shadow: 0 0 10px #0077ff, 0 0 20px #0077ff;
+            transition: all 0.3s ease;
+        }
+
+        .btn-glow:hover {
+            box-shadow: 0 0 20px #00c6ff, 0 0 40px #00c6ff;
+            transform: translateY(-2px);
+        }
+
+        .record-item {
+            border-left: 4px solid #0077ff;
+            transition: background-color 0.3s ease, transform 0.2s ease;
+        }
+        
+        .record-item:hover {
+            background-color: rgba(0, 119, 255, 0.15);
+            transform: translateX(5px);
+        }
+        
+        /* Custom Scrollbar */
+        ::-webkit-scrollbar {
+            width: 8px;
+        }
+        ::-webkit-scrollbar-track {
+            background: rgba(255, 255, 255, 0.05);
+        }
+        ::-webkit-scrollbar-thumb {
+            background: #0077ff;
+            border-radius: 4px;
+        }
+        ::-webkit-scrollbar-thumb:hover {
+            background: #00c6ff;
+        }
+
+        .modal {
+            display: none; /* Hidden by default */
+            position: fixed; /* Stay in place */
+            z-index: 50; /* Sit on top */
+            left: 0;
+            top: 0;
+            width: 100%; /* Full width */
+            height: 100%; /* Full height */
+            overflow: auto; /* Enable scroll if needed */
+            background-color: rgba(0,0,0,0.7); /* Black w/ opacity */
+            justify-content: center;
+            align-items: center;
+        }
+
+        .modal-content {
+            position: relative;
+            width: 90%; 
+            max-width: 500px;
+        }
+    </style>
+</head>
+<body class="bg-gray-900">
+
+    <div class="w-full max-w-4xl mx-auto">
+        <header class="text-center mb-8">
+            <h1 class="text-4xl md:text-5xl font-bold neon-text">Medication Log</h1>
+            <p class="text-lg text-gray-400 mt-2">Your personal medicine tracker.</p>
+        </header>
+
+        <main>
+            <!-- Add Medicine Form -->
+            <div class="glass-container p-6 mb-8 neon-glow">
+                <h2 class="text-2xl font-semibold mb-4 neon-text">Add New Record</h2>
+                <div class="grid grid-cols-1 md:grid-cols-4 gap-4">
+                    <input id="medicine-name" type="text" placeholder="Medicine Name (e.g., Panadol)" class="form-input p-3 rounded-lg w-full col-span-1 md:col-span-2">
+                    <select id="medicine-form" class="form-input p-3 rounded-lg w-full">
+                        <option value="Tablet">Tablet</option>
+                        <option value="Capsule">Capsule</option>
+                        <option value="Syrup">Syrup</option>
+                        <option value="Injection">Injection</option>
+                    </select>
+                     <select id="medicine-category" class="form-input p-3 rounded-lg w-full">
+                        <option value="Antibiotic">Antibiotic</option>
+                        <option value="Painkiller">Painkiller</option>
+                        <option value="Vitamin">Vitamin</option>
+                        <option value="Allergy">Allergy</option>
+                        <option value="General">General</option>
+                        <option value="Other">Other</option>
+                    </select>
+                </div>
+                <div class="mt-4">
+                    <h3 class="font-medium mb-2">Time of Day:</h3>
+                    <div class="flex flex-wrap gap-2">
+                        <button onclick="addRecord('Morning')" class="btn-glow text-white font-bold py-2 px-4 rounded-lg flex-grow"><i class="fas fa-sun mr-2"></i>Morning</button>
+                        <button onclick="addRecord('Afternoon')" class="btn-glow text-white font-bold py-2 px-4 rounded-lg flex-grow"><i class="fas fa-cloud-sun mr-2"></i>Afternoon</button>
+                        <button onclick="addRecord('Night')" class="btn-glow text-white font-bold py-2 px-4 rounded-lg flex-grow"><i class="fas fa-moon mr-2"></i>Night</button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Medication History -->
+            <div class="glass-container p-6">
+                <div class="flex justify-between items-center mb-4">
+                    <h2 class="text-2xl font-semibold neon-text">History</h2>
+                    <button id="clear-history-btn" class="text-red-400 hover:text-red-300 transition-colors duration-300 text-sm">
+                        <i class="fas fa-trash-alt mr-1"></i>Clear All
+                    </button>
+                </div>
+                <div id="history-list" class="space-y-4 max-h-[40vh] overflow-y-auto pr-2">
+                    <!-- Records will be dynamically inserted here -->
+                </div>
+                 <p id="empty-state" class="text-center text-gray-500 py-4 hidden">No records yet. Add one above!</p>
+            </div>
+        </main>
+    </div>
+
+    <!-- Delete Confirmation Modal -->
+    <div id="delete-confirmation-modal" class="modal">
+        <div class="modal-content glass-container p-6 text-center">
+            <h3 class="text-xl font-semibold mb-4">Are you sure?</h3>
+            <p class="text-gray-400 mb-6">This action will permanently delete all records.</p>
+            <div class="flex justify-center gap-4">
+                <button id="confirm-delete" class="bg-red-500 hover:bg-red-600 text-white font-bold py-2 px-6 rounded-lg transition-colors">Confirm</button>
+                <button class="cancel-btn bg-gray-600 hover:bg-gray-700 text-white font-bold py-2 px-6 rounded-lg transition-colors">Cancel</button>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Edit Record Modal -->
+    <div id="edit-modal" class="modal">
+        <div class="modal-content glass-container p-6">
+            <h3 class="text-2xl font-semibold mb-6 neon-text">Edit Record</h3>
+            <form id="edit-form">
+                <input type="hidden" id="edit-record-id">
+                <div class="mb-4">
+                    <label for="edit-medicine-name" class="block mb-2 text-sm font-medium">Medicine Name</label>
+                    <input type="text" id="edit-medicine-name" class="form-input p-3 rounded-lg w-full">
+                </div>
+                <div class="grid grid-cols-2 gap-4 mb-4">
+                    <div>
+                        <label for="edit-medicine-form" class="block mb-2 text-sm font-medium">Form</label>
+                        <select id="edit-medicine-form" class="form-input p-3 rounded-lg w-full">
+                            <option value="Tablet">Tablet</option>
+                            <option value="Capsule">Capsule</option>
+                            <option value="Syrup">Syrup</option>
+                            <option value="Injection">Injection</option>
+                        </select>
+                    </div>
+                    <div>
+                         <label for="edit-medicine-category" class="block mb-2 text-sm font-medium">Category</label>
+                         <select id="edit-medicine-category" class="form-input p-3 rounded-lg w-full">
+                            <option value="Antibiotic">Antibiotic</option>
+                            <option value="Painkiller">Painkiller</option>
+                            <option value="Vitamin">Vitamin</option>
+                            <option value="Allergy">Allergy</option>
+                            <option value="General">General</option>
+                            <option value="Other">Other</option>
+                        </select>
+                    </div>
+                </div>
+                <div class="mb-6">
+                    <label for="edit-timestamp" class="block mb-2 text-sm font-medium">Date and Time</label>
+                    <input type="datetime-local" id="edit-timestamp" class="form-input p-3 rounded-lg w-full">
+                </div>
+                <div class="flex justify-end gap-4">
+                    <button type="button" class="cancel-btn bg-gray-600 hover:bg-gray-700 text-white font-bold py-2 px-6 rounded-lg transition-colors">Cancel</button>
+                    <button type="submit" class="btn-glow text-white font-bold py-2 px-6 rounded-lg">Save Changes</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            // --- DOM Elements ---
+            const medicineNameInput = document.getElementById('medicine-name');
+            const medicineFormInput = document.getElementById('medicine-form');
+            const medicineCategoryInput = document.getElementById('medicine-category');
+            const historyList = document.getElementById('history-list');
+            const emptyState = document.getElementById('empty-state');
+            const clearHistoryBtn = document.getElementById('clear-history-btn');
+            const deleteModal = document.getElementById('delete-confirmation-modal');
+            const confirmDeleteBtn = document.getElementById('confirm-delete');
+            const editModal = document.getElementById('edit-modal');
+            const editForm = document.getElementById('edit-form');
+            const cancelBtns = document.querySelectorAll('.cancel-btn');
+            const editRecordIdInput = document.getElementById('edit-record-id');
+            const editMedicineNameInput = document.getElementById('edit-medicine-name');
+            const editMedicineFormInput = document.getElementById('edit-medicine-form');
+            const editMedicineCategoryInput = document.getElementById('edit-medicine-category');
+            const editTimestampInput = document.getElementById('edit-timestamp');
+
+            let localRecords = [];
+
+            // --- Local Storage Functions ---
+            
+            /**
+             * Loads records from browser's localStorage.
+             */
+            const loadRecords = () => {
+                const recordsJSON = localStorage.getItem('medicationRecords');
+                localRecords = recordsJSON ? JSON.parse(recordsJSON) : [];
+            };
+
+            /**
+             * Saves the current records array to localStorage.
+             */
+            const saveRecords = () => {
+                localRecords.sort((a, b) => new Date(b.timestamp) - new Date(a.timestamp));
+                localStorage.setItem('medicationRecords', JSON.stringify(localRecords));
+            };
+
+            // --- Utility Functions ---
+
+            const formatTimestamp = (isoString) => {
+                const date = new Date(isoString);
+                const options = { weekday: 'short', year: 'numeric', month: 'short', day: 'numeric', hour: 'numeric', minute: '2-digit', hour12: true };
+                return date.toLocaleDateString('en-US', options).replace(/, /g, ', ');
+            };
+            
+            const getTimeOfDay = (isoString) => {
+                const hour = new Date(isoString).getHours();
+                if (hour >= 4 && hour < 12) return 'Morning';
+                if (hour >= 12 && hour < 18) return 'Afternoon';
+                return 'Night';
+            };
+
+
+            // --- UI Rendering ---
+
+            const renderHistory = () => {
+                historyList.innerHTML = '';
+                if (localRecords.length === 0) {
+                    emptyState.classList.remove('hidden');
+                } else {
+                    emptyState.classList.add('hidden');
+                    localRecords.forEach(record => {
+                        const recordEl = document.createElement('div');
+                        recordEl.className = 'record-item bg-gray-800/50 p-4 rounded-lg flex justify-between items-center';
+                        recordEl.innerHTML = `
+                            <div>
+                                <p class="font-bold text-lg text-white">${record.name} 
+                                    <span class="text-sm font-light text-gray-400 ml-2">(${record.form} / ${record.category})</span>
+                                </p>
+                                <p class="text-gray-300">${record.timeOfDay} - <span class="text-xs">${formatTimestamp(record.timestamp)}</span></p>
+                            </div>
+                            <div class="flex gap-3">
+                               <button data-id="${record.id}" class="edit-btn text-gray-400 hover:text-blue-400 transition-colors"><i class="fas fa-pencil-alt"></i></button>
+                               <button data-id="${record.id}" class="delete-btn text-gray-400 hover:text-red-400 transition-colors"><i class="fas fa-times"></i></button>
+                            </div>
+                        `;
+                        historyList.appendChild(recordEl);
+                    });
+                }
+            };
+            
+            const openEditModal = (id) => {
+                const record = localRecords.find(r => r.id === id);
+                if (!record) return;
+
+                editRecordIdInput.value = id;
+                editMedicineNameInput.value = record.name;
+                editMedicineFormInput.value = record.form;
+                editMedicineCategoryInput.value = record.category;
+                
+                const d = new Date(record.timestamp);
+                d.setMinutes(d.getMinutes() - d.getTimezoneOffset());
+                editTimestampInput.value = d.toISOString().slice(0, 16);
+                
+                editModal.style.display = 'flex';
+            };
+
+
+            // --- Core Logic ---
+
+            window.addRecord = (timeOfDay) => {
+                const name = medicineNameInput.value.trim();
+                if (!name) { 
+                    alert('Please enter a medicine name.'); 
+                    return; 
+                }
+
+                const newRecord = {
+                    id: crypto.randomUUID(), // Generate a unique ID
+                    name,
+                    form: medicineFormInput.value,
+                    category: medicineCategoryInput.value,
+                    timeOfDay,
+                    timestamp: new Date().toISOString()
+                };
+
+                localRecords.push(newRecord);
+                saveRecords();
+                renderHistory();
+                medicineNameInput.value = '';
+            };
+            
+            const deleteRecord = (id) => {
+                localRecords = localRecords.filter(record => record.id !== id);
+                saveRecords();
+                renderHistory();
+            };
+            
+            const clearAllRecords = () => {
+                localRecords = [];
+                saveRecords();
+                renderHistory();
+                deleteModal.style.display = 'none';
+            };
+            
+            const handleUpdateRecord = (e) => {
+                e.preventDefault();
+                const id = editRecordIdInput.value;
+                const recordIndex = localRecords.findIndex(record => record.id === id);
+                if (recordIndex === -1) return;
+
+                const updatedTimestamp = new Date(editTimestampInput.value).toISOString();
+                const name = editMedicineNameInput.value.trim();
+
+                if (!name) { 
+                    alert("Medicine name cannot be empty."); 
+                    return; 
+                }
+
+                localRecords[recordIndex] = {
+                    ...localRecords[recordIndex],
+                    name,
+                    form: editMedicineFormInput.value,
+                    category: editMedicineCategoryInput.value,
+                    timestamp: updatedTimestamp,
+                    timeOfDay: getTimeOfDay(updatedTimestamp)
+                };
+                
+                saveRecords();
+                renderHistory();
+                editModal.style.display = 'none';
+            };
+
+            // --- Event Listeners ---
+            historyList.addEventListener('click', (e) => {
+                const editBtn = e.target.closest('.edit-btn');
+                const deleteBtn = e.target.closest('.delete-btn');
+                
+                if (editBtn) openEditModal(editBtn.dataset.id);
+                if (deleteBtn) deleteRecord(deleteBtn.dataset.id);
+            });
+
+            clearHistoryBtn.addEventListener('click', () => {
+                deleteModal.style.display = 'flex';
+            });
+            
+            cancelBtns.forEach(btn => {
+                btn.addEventListener('click', () => {
+                    deleteModal.style.display = 'none';
+                    editModal.style.display = 'none';
+                });
+            });
+
+            confirmDeleteBtn.addEventListener('click', clearAllRecords);
+            editForm.addEventListener('submit', handleUpdateRecord);
+            
+            window.addEventListener('click', (event) => {
+                if (event.target == deleteModal) deleteModal.style.display = 'none';
+                if (event.target == editModal) editModal.style.display = 'none';
+            });
+
+            // --- Initial Load ---
+            const initialize = () => {
+                loadRecords();
+                renderHistory();
+            };
+
+            initialize();
+        });
+    </script>
+</body>
+</html>
